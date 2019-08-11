@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"os"
 
 	api "github.com/delgus/go-vk/callback-api"
 	"github.com/delgus/go-vk/client"
@@ -16,17 +15,6 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("vk-server: can't load config: %v", err)
 	}
-	//file for logs
-	file, err := os.OpenFile(cfg.VKLogFile, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
-	if err != nil {
-		logrus.Fatalf("vk-server: can't open log file: %v", err)
-	}
-	defer func() {
-		if err := file.Close(); err != nil {
-			logrus.Fatalf("vk-server: can't close log file: %v", err)
-		}
-	}()
-	logrus.SetOutput(file)
 
 	//db connection
 	db, err := sql.NewConnection(sql.ConnectionOptions{
