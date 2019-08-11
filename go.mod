@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/delgus/go-vk v0.0.0-20190808204418-f8ef228828d4
 	github.com/doug-martin/goqu/v8 v8.3.0
+	github.com/go-sql-driver/mysql v1.4.1
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lib/pq v1.2.0 // indirect
