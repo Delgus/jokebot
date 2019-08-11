@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	api "github.com/delgus/go-vk/callback-api"
@@ -40,7 +41,8 @@ func main() {
 	apiServer.OnMessageNew = vkhooks.OnMessageNew(jokeRepo, vk)
 
 	logrus.Println("vk server start...")
-	if err := http.ListenAndServe(":9000", apiServer); err != nil {
+	addr := fmt.Sprintf(`%s:%d`, cfg.Host, cfg.Port)
+	if err := http.ListenAndServe(addr, apiServer); err != nil {
 		panic(err)
 	}
 

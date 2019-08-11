@@ -4,7 +4,7 @@ import "github.com/kelseyhightower/envconfig"
 
 type config struct {
 	Host           string `envconfig:"VK_BOT_HOST"`
-	Port           int    `envconfig:"VK_BOT_PORT"`
+	Port           int    `envconfig:"PORT"`
 	VKAccessToken  string `envconfig:"VK_ACCESS_TOKEN" default:"default"`
 	VKConfirmToken string `envconfig:"VK_CONFIRM_TOKEN" default:"default"`
 	VKSecretKey    string `envconfig:"VK_SECRET_KEY" default:"default"`
