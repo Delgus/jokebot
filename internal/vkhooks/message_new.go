@@ -30,50 +30,67 @@ func OnMessageNew(jokeRepo *sql.JokeRepo, vk *client.VKClient) func(message api.
 		case jokeCommand:
 			joke, err := jokeRepo.GetNewJoke(message.FromID)
 			if err == app.ErrorJokeNotFound {
-				sendMessage(vk, message.FromID, jokesAreOverText)
+				if err := vk.MessagesSend(client.Message{UserID: message.FromID, Message: jokesAreOverText}); err != nil {
+					logrus.Error(err)
+				}
 				return
 			}
 			if err != nil {
 				logrus.Error(err)
-				sendMessage(vk, message.FromID, internalErrorText)
+				if err := vk.MessagesSend(client.Message{UserID: message.FromID, Message: internalErrorText}); err != nil {
+					logrus.Error(err)
+				}
 				return
 			}
-			sendMessage(vk, message.FromID, joke.Text)
-
+			if err := vk.MessagesSend(client.Message{UserID: message.FromID, Message: joke.Text}); err != nil {
+				logrus.Error(err)
+			}
 		case categoryListCommand:
 			list, err := jokeRepo.GetJokeCategoryList()
 			if err != nil {
 				logrus.Error(err)
-				sendMessage(vk, message.FromID, internalErrorText)
+				if err := vk.MessagesSend(client.Message{UserID: message.FromID, Message: internalErrorText}); err != nil {
+					logrus.Error(err)
+				}
 				return
 			}
 			var listMessage string
 			for _, l := range list {
 				listMessage = listMessage + fmt.Sprintf("%d. %s\n", l.ID, l.Name)
 			}
-			sendMessage(vk, message.FromID, listMessage)
-
+			if err := vk.MessagesSend(client.Message{UserID: message.FromID, Message: listMessage}); err != nil {
+				logrus.Error(err)
+			}
 		case helpCommand:
-			sendMessage(vk, message.FromID, helpMessageText())
-
+			if err := vk.MessagesSend(client.Message{UserID: message.FromID, Message: helpMessageText()}); err != nil {
+				logrus.Error(err)
+			}
 		default:
 			categoryID, err := strconv.Atoi(message.Text)
 			if err != nil {
 				mess := "Неверная команда! \n" + helpMessageText()
-				sendMessage(vk, message.FromID, mess)
+				if err := vk.MessagesSend(client.Message{UserID: message.FromID, Message: mess}); err != nil {
+					logrus.Error(err)
+				}
 				return
 			}
 			joke, err := jokeRepo.GetNewJokeByCategory(message.FromID, categoryID)
 			if err == app.ErrorJokeNotFound {
-				sendMessage(vk, message.FromID, jokesCategoryAreOverText)
+				if err := vk.MessagesSend(client.Message{UserID: message.FromID, Message: jokesCategoryAreOverText}); err != nil {
+					logrus.Error(err)
+				}
 				return
 			}
 			if err != nil {
 				logrus.Error(err)
-				sendMessage(vk, message.FromID, internalErrorText)
+				if err := vk.MessagesSend(client.Message{UserID: message.FromID, Message: internalErrorText}); err != nil {
+					logrus.Error(err)
+				}
 				return
 			}
-			sendMessage(vk, message.FromID, joke.Text)
+			if err := vk.MessagesSend(client.Message{UserID: message.FromID, Message: joke.Text}); err != nil {
+				logrus.Error(err)
+			}
 		}
 	}
 }
@@ -90,50 +107,4 @@ joke - возвращает анекдот из любой категории
 
 help - помощь
 `
-}
-
-func keyboard() string {
-	return `
-	{
-  "one_time": false,
-  "buttons": [
-    [
-      {
-        "action": {
-          "type": "text",
-          "payload": "joke",
-          "label": "Анекдот"
-        },
-        "color": "negative"
-      },
-      {
-        "action": {
-          "type": "text",
-          "payload": "list",
-          "label": "Категории анекдотов"
-        },
-        "color": "primary"
-      },
-      {
-        "action": {
-          "type": "text",
-          "payload": "help",
-          "label": "Помошь"
-        },
-        "color": "positive"
-      }
-    ]
-  ]
-}
-	`
-}
-
-func sendMessage(vk *client.VKClient, userID int, text string) {
-	if err := vk.MessagesSend(client.Message{
-		UserID:   userID,
-		Message:  jokesAreOverText,
-		Keyboard: keyboard(),
-	}); err != nil {
-		logrus.Error(err)
-	}
 }
