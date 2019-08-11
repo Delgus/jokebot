@@ -9,14 +9,9 @@ import (
 	"github.com/delgus/jokebot/internal/inrastructure/store/sql"
 	"github.com/delgus/jokebot/internal/vkhooks"
 	"github.com/sirupsen/logrus"
-	"github.com/subosito/gotenv"
 )
 
 func main() {
-	//load config
-	if err := gotenv.Load(".env"); err != nil {
-		logrus.Fatalf("vk-server: can't load environments: %v", err)
-	}
 	cfg, err := loadConfig()
 	if err != nil {
 		logrus.Fatalf("vk-server: can't load config: %v", err)
