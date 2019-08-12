@@ -1,1 +1,1 @@
-web: vk
+web: bin/vk
