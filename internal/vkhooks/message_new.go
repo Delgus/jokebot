@@ -113,6 +113,40 @@ func message(userID int, text string) api.Params {
 	b.RandomID(0)
 	b.DontParseLinks(false)
 	b.Message(text)
+	b.Keyboard(`{
+		"buttons": [
+		  [
+			{
+			  "action": {
+				"type": "text",
+				"label": "Анекдот",
+				"payload": "{\"command\":\"joke\"}"
+			  },
+			  "color": "positive"
+			}
+		  ],
+		  [
+			{
+			  "action": {
+				"type": "text",
+				"label": "Категории анекдотов",
+				"payload": "{\"command\":\"list\"}"
+			  },
+			  "color": "negative"
+			}
+		  ],
+		  [
+			{
+			  "action": {
+				"type": "text",
+				"label": "Помощь",
+				"payload": "{\"command\":\"help\"}"
+			  },
+			  "color": "primary"
+			}
+		  ]
+		]
+	  }`)
 	return b.Params
 }
 
