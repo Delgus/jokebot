@@ -1,6 +1,7 @@
 package vkhooks
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
@@ -30,9 +31,18 @@ func OnMessageNew(jokeRepo *sql.JokeRepo, vk *api.VK) func(obj object.MessageNew
 		text := obj.Message.Text
 		userID := obj.Message.FromID
 
-		switch text {
-		case jokeCommand:
-			joke, err := jokeRepo.GetNewJoke(obj.Message.FromID)
+		command, err := getCommand(obj.Message.Payload)
+		if err != nil {
+			logrus.Error(err)
+			if _, err := vk.MessagesSend(message(userID, internalErrorText)); err != nil {
+				logrus.Error(err)
+			}
+			return
+		}
+
+		switch {
+		case text == jokeCommand || command == jokeCommand:
+			joke, err := jokeRepo.GetNewJoke(userID)
 			if err == io.EOF {
 				if _, err := vk.MessagesSend(message(userID, jokesAreOverText)); err != nil {
 					logrus.Error(err)
@@ -51,7 +61,7 @@ func OnMessageNew(jokeRepo *sql.JokeRepo, vk *api.VK) func(obj object.MessageNew
 				logrus.Error(err)
 			}
 
-		case categoryListCommand:
+		case text == categoryListCommand || command == categoryListCommand:
 			list, err := jokeRepo.GetJokeCategoryList()
 			if err != nil {
 				logrus.Error(err)
@@ -70,7 +80,7 @@ func OnMessageNew(jokeRepo *sql.JokeRepo, vk *api.VK) func(obj object.MessageNew
 				logrus.Error(err)
 			}
 
-		case helpCommand:
+		case text == helpCommand || command == helpCommand:
 			if _, err := vk.MessagesSend(message(userID, helpMessageText())); err != nil {
 				logrus.Error(err)
 			}
@@ -148,6 +158,14 @@ func message(userID int, text string) api.Params {
 		]
 	  }`)
 	return b.Params
+}
+
+func getCommand(rawValue string) (string, error) {
+	payloadMap := make(map[string]string, 1)
+	if err := json.Unmarshal([]byte(rawValue), &payloadMap); err != nil {
+		return "", err
+	}
+	return payloadMap["command"], nil
 }
 
 func helpMessageText() string {
