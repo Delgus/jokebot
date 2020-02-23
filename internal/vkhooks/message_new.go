@@ -161,6 +161,9 @@ func message(userID int, text string) api.Params {
 }
 
 func getCommand(rawValue string) (string, error) {
+	if rawValue == "" {
+		return "", nil
+	}
 	payloadMap := make(map[string]string, 1)
 	if err := json.Unmarshal([]byte(rawValue), &payloadMap); err != nil {
 		return "", err
