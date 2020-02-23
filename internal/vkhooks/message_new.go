@@ -110,6 +110,7 @@ func OnMessageNew(jokeRepo *sql.JokeRepo, vk *api.VK) func(obj object.MessageNew
 func message(userID int, text string) api.Params {
 	b := params.NewMessagesSendBuilder()
 	b.PeerID(userID)
+	b.RandomID(0)
 	b.DontParseLinks(false)
 	b.Message(text)
 	return b.Params
