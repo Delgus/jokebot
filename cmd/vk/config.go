@@ -1,7 +1,5 @@
 package main
 
-import "github.com/kelseyhightower/envconfig"
-
 type config struct {
 	Host           string `envconfig:"HOST"`
 	Port           int    `envconfig:"PORT"`
@@ -11,10 +9,4 @@ type config struct {
 	DBDriver       string `envconfig:"DB_DRIVER" default:"sqlite3"`
 	DBAddr         string `envconfig:"DB_ADDR" default:"../../database/jokebot.db"`
 	DBDebug        bool   `envconfig:"DB_DEBUG" default:"false"`
-}
-
-func loadConfig() (config, error) {
-	var cfg = config{}
-	err := envconfig.Process("", &cfg)
-	return cfg, err
 }

@@ -1,10 +1,14 @@
 package app
 
-import "errors"
+type JokeCategory struct {
+	ID   int
+	Name string
+}
 
-var (
-	ErrorJokeNotFound = errors.New("joke not found")
-)
+type Joke struct {
+	ID   int
+	Text string
+}
 
 type JokeRepo interface {
 	GetNewJoke(userID int) (*Joke, error)

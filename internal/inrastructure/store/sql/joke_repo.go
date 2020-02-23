@@ -2,6 +2,7 @@ package sql
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/delgus/jokebot/internal/app"
 	"github.com/doug-martin/goqu/v8"
@@ -40,7 +41,7 @@ func (j *JokeRepo) GetNewJoke(userID int) (*app.Joke, error) {
 		return nil, fmt.Errorf("infrastructure.store.sql: can't get joke: %v", err)
 	}
 	if !found {
-		return nil, app.ErrorJokeNotFound
+		return nil, io.EOF
 	}
 	insert := j.db.Insert("joke_user").Rows(
 		goqu.Record{"user_id": userID, "joke_id": row.ID},
@@ -66,7 +67,7 @@ func (j *JokeRepo) GetNewJokeByCategory(userID int, categoryID int) (*app.Joke, 
 		return nil, fmt.Errorf("infrastructure.store.sql: can't get joke: %v", err)
 	}
 	if !found {
-		return nil, app.ErrorJokeNotFound
+		return nil, io.EOF
 	}
 	insert := j.db.Insert("joke_user").Rows(
 		goqu.Record{"user_id": userID, "joke_id": row.ID},

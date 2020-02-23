@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
-	api "github.com/delgus/go-vk/callback-api"
-	"github.com/delgus/go-vk/client"
+	"github.com/SevereCloud/vksdk/api"
+	"github.com/SevereCloud/vksdk/callback"
 	"github.com/delgus/jokebot/internal/inrastructure/store/sql"
 	"github.com/delgus/jokebot/internal/vkhooks"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 )
 
@@ -29,21 +30,25 @@ func main() {
 	//service
 	jokeRepo := sql.NewJokeRepo(db)
 
-	//client
-	vk := new(client.VKClient)
-	vk.SetAccessToken(cfg.VKAccessToken)
+	// vk client
+	vk := api.Init(cfg.VKAccessToken)
 
-	//callback api server
-	apiServer := api.NewApiServer()
-	apiServer.SetConfirmToken(cfg.VKConfirmToken)
-	apiServer.SetSecret(cfg.VKSecretKey)
+	// vk callback
+	var cb callback.Callback
+	cb.ConfirmationKey = cfg.VKConfirmToken
+	cb.SecretKey = cfg.VKSecretKey
 
-	apiServer.OnMessageNew = vkhooks.OnMessageNew(jokeRepo, vk)
+	cb.MessageNew(vkhooks.OnMessageNew(jokeRepo, vk))
+
+	http.HandleFunc("/", cb.HandleFunc)
 
 	logrus.Println("vk server start...")
 	addr := fmt.Sprintf(`%s:%d`, cfg.Host, cfg.Port)
-	if err := http.ListenAndServe(addr, apiServer); err != nil {
-		panic(err)
-	}
+	logrus.Fatal(http.ListenAndServe(addr, nil))
+}
 
+func loadConfig() (config, error) {
+	var cfg config
+	err := envconfig.Process("", &cfg)
+	return cfg, err
 }

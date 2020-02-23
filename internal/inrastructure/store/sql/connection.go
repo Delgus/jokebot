@@ -3,9 +3,9 @@ package sql
 import (
 	"database/sql"
 	"fmt"
-	"github.com/doug-martin/goqu/v8"
 	"time"
 
+	"github.com/doug-martin/goqu/v8"
 	"github.com/sirupsen/logrus"
 )
 
