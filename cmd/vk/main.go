@@ -114,7 +114,7 @@ func main() {
 	if info.LastErrorDate != 0 {
 		logrus.Errorf("Telegram callback failed: %s", info.LastErrorMessage)
 	}
-	updates := bot.ListenForWebhook("/" + bot.Token)
+	updates := bot.ListenForWebhook("/tg")
 
 	// vk callback
 	cb := callback.NewVKCallback(
