@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/SevereCloud/vksdk/callback"
 	"github.com/delgus/jokebot/internal/app"
+	"github.com/delgus/jokebot/internal/inrastructure/callback"
 	"github.com/delgus/jokebot/internal/inrastructure/notify"
 	"github.com/delgus/jokebot/internal/inrastructure/store/sql"
-	"github.com/delgus/jokebot/internal/vkhooks"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 )
@@ -31,18 +30,22 @@ func main() {
 	// repository
 	jokeRepo := sql.NewJokeRepo(db)
 
-	// vk client notifier
+	// vk notifier
 	notifier := notify.NewVKNotifier(cfg.VKAccessToken, logrus.StandardLogger())
 
 	// joke service
-	service := &app.JokeService{
-		JokeCommand:            "joke",
-		ListCommand:            "list",
-		HelpCommand:            "help",
-		JokesAreOverText:       "К сожалению шутки закончились",
-		TryAnotherCategoryText: "Попробуйте другую категорию!",
-		InternalErrorText:      "К сожалению произошла ошибка. Попробуйте получить шутку позднее",
-		HelpMessageText: `
+	service := app.NewJokeService(
+		notifier,
+		jokeRepo,
+		logrus.StandardLogger(),
+		&app.Options{
+			JokeCommand:            "joke",
+			ListCommand:            "list",
+			HelpCommand:            "help",
+			JokesAreOverText:       "К сожалению шутки закончились",
+			TryAnotherCategoryText: "Попробуйте другую категорию!",
+			InternalErrorText:      "К сожалению произошла ошибка. Попробуйте получить шутку позднее",
+			HelpMessageText: `
 			Команды для бота:
 			
 			list - список категорий анекдотов
@@ -53,21 +56,18 @@ func main() {
 			
 			help - помощь
 			`,
-		NotCorrectCommandText: "Неверная команда! \n",
-		Notifier:              notifier,
-		Repo:                  jokeRepo,
-	}
+			NotCorrectCommandText: "Неверная команда! \n",
+		})
 
 	// vk callback
-	var cb callback.Callback
-	cb.ConfirmationKey = cfg.VKConfirmToken
-	cb.SecretKey = cfg.VKSecretKey
-
-	cb.MessageNew(vkhooks.OnMessageNew(service))
-
+	cb := callback.NewVKCallback(
+		cfg.VKConfirmToken,
+		cfg.VKSecretKey,
+		service,
+		logrus.StandardLogger())
 	http.HandleFunc("/", cb.HandleFunc)
 
-	logrus.Println("vk server start...")
+	logrus.Info("application server start...")
 	addr := fmt.Sprintf(`%s:%d`, cfg.Host, cfg.Port)
 	logrus.Fatal(http.ListenAndServe(addr, nil))
 }

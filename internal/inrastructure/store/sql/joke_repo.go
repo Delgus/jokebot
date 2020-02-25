@@ -53,7 +53,7 @@ func (j *JokeRepo) GetNewJoke(userID int) (*app.Joke, error) {
 	return resolveJokeRow(row), nil
 }
 
-func (j *JokeRepo) GetNewJokeByCategory(userID int, categoryID int) (*app.Joke, error) {
+func (j *JokeRepo) GetNewJokeByCategory(userID, categoryID int) (*app.Joke, error) {
 	var row jokeRow
 	found, err := j.db.From("joke").
 		Select("joke.id", "text").

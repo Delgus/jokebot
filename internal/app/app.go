@@ -4,94 +4,115 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-
-	"github.com/sirupsen/logrus"
 )
 
-type JokeCategory struct {
-	ID   int
-	Name string
-}
+type (
+	JokeCategory struct {
+		ID   int
+		Name string
+	}
 
-type Joke struct {
-	ID   int
-	Text string
-}
+	Joke struct {
+		ID   int
+		Text string
+	}
 
-type JokeRepo interface {
-	GetNewJoke(userID int) (*Joke, error)
-	GetNewJokeByCategory(userID int, categoryID int) (*Joke, error)
-	GetJokeCategoryList() ([]JokeCategory, error)
-}
+	JokeRepo interface {
+		GetNewJoke(userID int) (*Joke, error)
+		GetNewJokeByCategory(userID int, categoryID int) (*Joke, error)
+		GetJokeCategoryList() ([]JokeCategory, error)
+	}
 
-type Notifier interface {
-	SendMessage(int, string)
-}
+	Notifier interface {
+		SendMessage(int, string)
+	}
 
-type JokeService struct {
-	JokeCommand string
-	ListCommand string
-	HelpCommand string
+	Logger interface {
+		Error(...interface{})
+	}
 
-	JokesAreOverText       string
-	TryAnotherCategoryText string
-	InternalErrorText      string
-	HelpMessageText        string
-	NotCorrectCommandText  string
+	Options struct {
+		JokeCommand string
+		ListCommand string
+		HelpCommand string
 
-	Notifier Notifier
-	Repo     JokeRepo
+		JokesAreOverText       string
+		TryAnotherCategoryText string
+		InternalErrorText      string
+		HelpMessageText        string
+		NotCorrectCommandText  string
+	}
+
+	JokeService struct {
+		*Options
+		n      Notifier
+		r      JokeRepo
+		logger Logger
+	}
+)
+
+func NewJokeService(n Notifier, r JokeRepo, l Logger, o *Options) *JokeService {
+	return &JokeService{
+		Options: o,
+		n:       n,
+		r:       r,
+		logger:  l,
+	}
 }
 
 func (j *JokeService) Command(userID int, command string) {
 	switch command {
 	case j.JokeCommand:
-		joke, err := j.Repo.GetNewJoke(userID)
+		joke, err := j.r.GetNewJoke(userID)
 		if err == io.EOF {
-			j.Notifier.SendMessage(userID, j.JokesAreOverText)
+			j.n.SendMessage(userID, j.JokesAreOverText)
 			return
 		}
 		if err != nil {
-			logrus.Error(err)
-			j.Notifier.SendMessage(userID, j.InternalErrorText)
+			j.logger.Error(err)
+			j.n.SendMessage(userID, j.InternalErrorText)
 			return
 		}
 
-		j.Notifier.SendMessage(userID, joke.Text)
+		j.n.SendMessage(userID, joke.Text)
 
 	case j.ListCommand:
-		list, err := j.Repo.GetJokeCategoryList()
+		list, err := j.r.GetJokeCategoryList()
 		if err != nil {
-			logrus.Error(err)
-			j.Notifier.SendMessage(userID, j.InternalErrorText)
+			j.logger.Error(err)
+			j.n.SendMessage(userID, j.InternalErrorText)
 			return
 		}
 
-		j.Notifier.SendMessage(userID, listMessage(list))
+		j.n.SendMessage(userID, listMessage(list))
 
 	case j.HelpCommand:
-		j.Notifier.SendMessage(userID, j.HelpMessageText)
+		j.n.SendMessage(userID, j.HelpMessageText)
 
 	default:
 		categoryID, err := strconv.Atoi(command)
 		if err != nil {
-			j.Notifier.SendMessage(userID, j.NotCorrectCommandText+j.HelpMessageText)
+			j.n.SendMessage(userID, j.NotCorrectCommandText+j.HelpMessageText)
 			return
 		}
 
-		joke, err := j.Repo.GetNewJokeByCategory(userID, categoryID)
+		joke, err := j.r.GetNewJokeByCategory(userID, categoryID)
 		if err == io.EOF {
-			j.Notifier.SendMessage(userID, j.JokesAreOverText+" "+j.TryAnotherCategoryText)
+			j.n.SendMessage(userID, j.JokesAreOverText+" "+j.TryAnotherCategoryText)
 			return
 		}
 		if err != nil {
-			logrus.Error(err)
-			j.Notifier.SendMessage(userID, j.InternalErrorText)
+			j.logger.Error(err)
+			j.n.SendMessage(userID, j.InternalErrorText)
 			return
 		}
 
-		j.Notifier.SendMessage(userID, joke.Text)
+		j.n.SendMessage(userID, joke.Text)
 	}
+}
+
+func (j *JokeService) NotifyAboutInternalError(userID int) {
+	j.n.SendMessage(userID, j.InternalErrorText)
 }
 
 func listMessage(list []JokeCategory) string {
