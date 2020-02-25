@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/delgus/jokebot/internal/app"
 	"github.com/delgus/jokebot/internal/inrastructure/callback"
 	"github.com/delgus/jokebot/internal/inrastructure/notify"
 	"github.com/delgus/jokebot/internal/inrastructure/store/sql"
+	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 )
@@ -95,6 +97,26 @@ func main() {
 			NotCorrectCommandText: "Неверная команда! \n",
 		})
 
+	addr := fmt.Sprintf(`%s:%d`, cfg.Host, cfg.Port)
+
+	bot, err := tg.NewBotAPI(cfg.TGAccessToken)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	_, err = bot.SetWebhook(tg.NewWebhook(addr + "/tg"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	info, err := bot.GetWebhookInfo()
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	if info.LastErrorDate != 0 {
+		logrus.Error("Telegram callback failed: %v", info.LastErrorMessage)
+	}
+	updates := bot.ListenForWebhook("/" + bot.Token)
+
 	// vk callback
 	cb := callback.NewVKCallback(
 		cfg.VKConfirmToken,
@@ -104,7 +126,12 @@ func main() {
 	http.HandleFunc("/", cb.HandleFunc)
 
 	logrus.Info("application server start...")
-	addr := fmt.Sprintf(`%s:%d`, cfg.Host, cfg.Port)
+	go func() {
+		for update := range updates {
+			log.Printf("%+v\n", update)
+		}
+	}()
+
 	logrus.Fatal(http.ListenAndServe(addr, nil))
 }
 

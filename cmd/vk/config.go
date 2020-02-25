@@ -9,4 +9,5 @@ type config struct {
 	DBDriver       string `envconfig:"DB_DRIVER" default:"sqlite3"`
 	DBAddr         string `envconfig:"DB_ADDR" default:"../../database/jokebot.db"`
 	DBDebug        bool   `envconfig:"DB_DEBUG" default:"false"`
+	TGAccessToken  string `envconfig:"TG_ACCESS_TOKEN"`
 }
