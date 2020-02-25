@@ -103,6 +103,8 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+
+	logrus.Info(addr)
 	_, err = bot.SetWebhook(tg.NewWebhook(addr + "/tg"))
 	if err != nil {
 		log.Fatal(err)
