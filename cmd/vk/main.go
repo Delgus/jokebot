@@ -97,15 +97,12 @@ func main() {
 			NotCorrectCommandText: "Неверная команда! \n",
 		})
 
-	addr := fmt.Sprintf(`%s:%d`, cfg.Host, cfg.Port)
-
 	bot, err := tg.NewBotAPI(cfg.TGAccessToken)
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	logrus.Info(addr)
-	_, err = bot.SetWebhook(tg.NewWebhook(addr + "/tg"))
+	_, err = bot.SetWebhook(tg.NewWebhook(cfg.TGWebhook + "/tg"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -115,7 +112,7 @@ func main() {
 		logrus.Fatal(err)
 	}
 	if info.LastErrorDate != 0 {
-		logrus.Error("Telegram callback failed: %v", info.LastErrorMessage)
+		logrus.Errorf("Telegram callback failed: %s", info.LastErrorMessage)
 	}
 	updates := bot.ListenForWebhook("/" + bot.Token)
 
@@ -134,6 +131,7 @@ func main() {
 		}
 	}()
 
+	addr := fmt.Sprintf(`%s:%d`, cfg.Host, cfg.Port)
 	logrus.Fatal(http.ListenAndServe(addr, nil))
 }
 
