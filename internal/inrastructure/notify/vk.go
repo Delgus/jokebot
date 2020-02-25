@@ -9,17 +9,24 @@ type (
 	Logger interface {
 		Error(...interface{})
 	}
+
 	VKNotifier struct {
-		vk     *api.VK
-		logger Logger
+		vk       *api.VK
+		logger   Logger
+		keyboard string
 	}
 )
 
 func NewVKNotifier(accessToken string, logger Logger) *VKNotifier {
 	return &VKNotifier{
-		vk:     api.Init(accessToken),
-		logger: logger,
+		vk:       api.Init(accessToken),
+		logger:   logger,
+		keyboard: "{}",
 	}
+}
+
+func (n *VKNotifier) Keyboard(keyboard string) {
+	n.keyboard = keyboard
 }
 
 func (n *VKNotifier) SendMessage(userID int, text string) {
@@ -28,40 +35,7 @@ func (n *VKNotifier) SendMessage(userID int, text string) {
 	b.RandomID(0)
 	b.DontParseLinks(false)
 	b.Message(text)
-	b.Keyboard(`{
-		"buttons": [
-		  [
-			{
-			  "action": {
-				"type": "text",
-				"label": "Анекдот",
-				"payload": "{\"command\":\"joke\"}"
-			  },
-			  "color": "positive"
-			}
-		  ],
-		  [
-			{
-			  "action": {
-				"type": "text",
-				"label": "Категории анекдотов",
-				"payload": "{\"command\":\"list\"}"
-			  },
-			  "color": "negative"
-			}
-		  ],
-		  [
-			{
-			  "action": {
-				"type": "text",
-				"label": "Помощь",
-				"payload": "{\"command\":\"help\"}"
-			  },
-			  "color": "primary"
-			}
-		  ]
-		]
-	  }`)
+	b.Keyboard(n.keyboard)
 	if _, err := n.vk.MessagesSend(b.Params); err != nil {
 		n.logger.Error(err)
 	}

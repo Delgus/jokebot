@@ -32,6 +32,40 @@ func main() {
 
 	// vk notifier
 	notifier := notify.NewVKNotifier(cfg.VKAccessToken, logrus.StandardLogger())
+	notifier.Keyboard(`{
+		"buttons": [
+		  [
+			{
+			  "action": {
+				"type": "text",
+				"label": "Анекдот",
+				"payload": "{\"command\":\"joke\"}"
+			  },
+			  "color": "positive"
+			}
+		  ],
+		  [
+			{
+			  "action": {
+				"type": "text",
+				"label": "Категории анекдотов",
+				"payload": "{\"command\":\"list\"}"
+			  },
+			  "color": "negative"
+			}
+		  ],
+		  [
+			{
+			  "action": {
+				"type": "text",
+				"label": "Помощь",
+				"payload": "{\"command\":\"help\"}"
+			  },
+			  "color": "primary"
+			}
+		  ]
+		]
+	  }`)
 
 	// joke service
 	service := app.NewJokeService(
