@@ -11,7 +11,6 @@ import (
 type (
 	Logger interface {
 		Error(...interface{})
-		Info(...interface{})
 	}
 
 	Service interface {
@@ -31,6 +30,18 @@ func NewVKCallback(confirmToken, secretKey string, service Service, logger Logge
 		ConfirmationKey: confirmToken,
 		SecretKey:       secretKey,
 	}
+	cb.MessageNew(func(obj object.MessageNewObject, groupID int) {
+		userID := obj.Message.FromID
+
+		command, err := getCommand(obj.Message.Payload, obj.Message.Text)
+		if err != nil {
+			logger.Error(err)
+			service.NotifyAboutInternalError(userID)
+			return
+		}
+
+		service.Command(userID, command)
+	})
 	return &VKCallback{
 		service: service,
 		cb:      cb,
@@ -39,17 +50,6 @@ func NewVKCallback(confirmToken, secretKey string, service Service, logger Logge
 }
 
 func (c *VKCallback) HandleFunc(w http.ResponseWriter, r *http.Request) {
-	c.cb.MessageNew(func(obj object.MessageNewObject, groupID int) {
-		userID := obj.Message.FromID
-
-		command, err := getCommand(obj.Message.Payload, obj.Message.Text)
-		if err != nil {
-			c.logger.Error(err)
-			c.service.NotifyAboutInternalError(userID)
-			return
-		}
-		c.service.Command(userID, command)
-	})
 	c.cb.HandleFunc(w, r)
 }
 
