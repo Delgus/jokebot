@@ -6,6 +6,8 @@ import (
 
 	"github.com/SevereCloud/vksdk/api"
 	"github.com/SevereCloud/vksdk/callback"
+	"github.com/delgus/jokebot/internal/app"
+	"github.com/delgus/jokebot/internal/inrastructure/notify"
 	"github.com/delgus/jokebot/internal/inrastructure/store/sql"
 	"github.com/delgus/jokebot/internal/vkhooks"
 	"github.com/kelseyhightower/envconfig"
@@ -18,7 +20,7 @@ func main() {
 		logrus.Fatalf("vk-server: can't load config: %v", err)
 	}
 
-	//db connection
+	// db connection
 	db, err := sql.NewConnection(sql.ConnectionOptions{
 		Addr:   cfg.DBAddr,
 		Driver: cfg.DBDriver,
@@ -27,18 +29,45 @@ func main() {
 		logrus.Fatalf("vk-server: can't connect database: %v", err)
 	}
 
-	//service
+	// repository
 	jokeRepo := sql.NewJokeRepo(db)
 
 	// vk client
 	vk := api.Init(cfg.VKAccessToken)
+
+	// notifier
+	notifier := notify.NewVKNotifier(vk)
+
+	// joke service
+	service := &app.JokeService{
+		JokeCommand:            "joke",
+		ListCommand:            "list",
+		HelpCommand:            "help",
+		JokesAreOverText:       "К сожалению шутки закончились",
+		TryAnotherCategoryText: "Попробуйте другую категорию!",
+		InternalErrorText:      "К сожалению произошла ошибка. Попробуйте получить шутку позднее",
+		HelpMessageText: `
+			Команды для бота:
+			
+			list - список категорий анекдотов
+			
+			Чтобы получить анекдот из категории,отправьте номер категории
+			
+			joke - возвращает анекдот из любой категории
+			
+			help - помощь
+			`,
+		NotCorrectCommandText: "Неверная команда! \n",
+		Notifier:              notifier,
+		Repo:                  jokeRepo,
+	}
 
 	// vk callback
 	var cb callback.Callback
 	cb.ConfirmationKey = cfg.VKConfirmToken
 	cb.SecretKey = cfg.VKSecretKey
 
-	cb.MessageNew(vkhooks.OnMessageNew(jokeRepo, vk))
+	cb.MessageNew(vkhooks.OnMessageNew(service))
 
 	http.HandleFunc("/", cb.HandleFunc)
 
