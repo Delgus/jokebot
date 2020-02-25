@@ -35,40 +35,6 @@ func main() {
 
 	// vk notifier
 	vkNotifier := notify.NewVKNotifier(cfg.VKAccessToken, logrus.StandardLogger())
-	vkNotifier.Keyboard(`{
-		"buttons": [
-		  [
-			{
-			  "action": {
-				"type": "text",
-				"label": "Анекдот",
-				"payload": "{\"command\":\"joke\"}"
-			  },
-			  "color": "positive"
-			}
-		  ],
-		  [
-			{
-			  "action": {
-				"type": "text",
-				"label": "Категории анекдотов",
-				"payload": "{\"command\":\"list\"}"
-			  },
-			  "color": "negative"
-			}
-		  ],
-		  [
-			{
-			  "action": {
-				"type": "text",
-				"label": "Помощь",
-				"payload": "{\"command\":\"help\"}"
-			  },
-			  "color": "primary"
-			}
-		  ]
-		]
-	  }`)
 
 	// tg notifier
 	tgNotifier, err := notify.NewTGNotifier(

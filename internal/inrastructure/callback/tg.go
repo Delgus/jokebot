@@ -40,7 +40,6 @@ func (tgl *TGListener) Listen(pattern string) error {
 				continue
 			}
 			userID := update.Message.Chat.ID
-
 			command := update.Message.Text
 			if err != nil {
 				tgl.logger.Error(err)
