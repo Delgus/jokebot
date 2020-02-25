@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/SevereCloud/vksdk/api"
 	"github.com/SevereCloud/vksdk/callback"
 	"github.com/delgus/jokebot/internal/app"
 	"github.com/delgus/jokebot/internal/inrastructure/notify"
@@ -32,11 +31,8 @@ func main() {
 	// repository
 	jokeRepo := sql.NewJokeRepo(db)
 
-	// vk client
-	vk := api.Init(cfg.VKAccessToken)
-
-	// notifier
-	notifier := notify.NewVKNotifier(vk)
+	// vk client notifier
+	notifier := notify.NewVKNotifier(cfg.VKAccessToken, logrus.StandardLogger())
 
 	// joke service
 	service := &app.JokeService{

@@ -3,15 +3,23 @@ package notify
 import (
 	"github.com/SevereCloud/vksdk/api"
 	"github.com/SevereCloud/vksdk/api/params"
-	"github.com/sirupsen/logrus"
 )
 
-type VKNotifier struct {
-	vk *api.VK
-}
+type (
+	Logger interface {
+		Error(...interface{})
+	}
+	VKNotifier struct {
+		vk     *api.VK
+		logger Logger
+	}
+)
 
-func NewVKNotifier(vk *api.VK) *VKNotifier {
-	return &VKNotifier{vk: vk}
+func NewVKNotifier(accessToken string, logger Logger) *VKNotifier {
+	return &VKNotifier{
+		vk:     api.Init(accessToken),
+		logger: logger,
+	}
 }
 
 func (n *VKNotifier) SendMessage(userID int, text string) {
@@ -55,6 +63,6 @@ func (n *VKNotifier) SendMessage(userID int, text string) {
 		]
 	  }`)
 	if _, err := n.vk.MessagesSend(b.Params); err != nil {
-		logrus.Error(err)
+		n.logger.Error(err)
 	}
 }
