@@ -9,7 +9,6 @@ import (
 	"github.com/delgus/jokebot/internal/inrastructure/callback"
 	"github.com/delgus/jokebot/internal/inrastructure/notify"
 	"github.com/delgus/jokebot/internal/inrastructure/store/sql"
-	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 )
@@ -35,8 +34,8 @@ func main() {
 	jokeRepo := sql.NewJokeRepo(db)
 
 	// vk notifier
-	notifier := notify.NewVKNotifier(cfg.VKAccessToken, logrus.StandardLogger())
-	notifier.Keyboard(`{
+	vkNotifier := notify.NewVKNotifier(cfg.VKAccessToken, logrus.StandardLogger())
+	vkNotifier.Keyboard(`{
 		"buttons": [
 		  [
 			{
@@ -71,65 +70,78 @@ func main() {
 		]
 	  }`)
 
-	// joke service
-	service := app.NewJokeService(
-		notifier,
-		jokeRepo,
+	// tg notifier
+	tgNotifier, err := notify.NewTGNotifier(
+		cfg.TGAccessToken,
 		logrus.StandardLogger(),
-		&app.Options{
-			JokeCommand:            "joke",
-			ListCommand:            "list",
-			HelpCommand:            "help",
-			JokesAreOverText:       "К сожалению шутки закончились",
-			TryAnotherCategoryText: "Попробуйте другую категорию!",
-			InternalErrorText:      "К сожалению произошла ошибка. Попробуйте получить шутку позднее",
-			HelpMessageText: `
-			Команды для бота:
-			
-			list - список категорий анекдотов
-			
-			Чтобы получить анекдот из категории,отправьте номер категории
-			
-			joke - возвращает анекдот из любой категории
-			
-			help - помощь
-			`,
-			NotCorrectCommandText: "Неверная команда! \n",
-		})
-
-	bot, err := tg.NewBotAPI(cfg.TGAccessToken)
+	)
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	_, err = bot.SetWebhook(tg.NewWebhook(cfg.TGWebhook + "/tg"))
+	// options
+	opts := &app.Options{
+		JokeCommand:            "joke",
+		ListCommand:            "list",
+		HelpCommand:            "help",
+		JokesAreOverText:       "К сожалению шутки закончились",
+		TryAnotherCategoryText: "Попробуйте другую категорию!",
+		InternalErrorText:      "К сожалению произошла ошибка. Попробуйте получить шутку позднее",
+		HelpMessageText: `
+		Команды для бота:
+		
+		list - список категорий анекдотов
+		
+		Чтобы получить анекдот из категории,отправьте номер категории
+		
+		joke - возвращает анекдот из любой категории
+		
+		help - помощь
+		`,
+		NotCorrectCommandText: "Неверная команда! \n",
+	}
+
+	// joke vk service
+	vkService := app.NewJokeService(
+		vkNotifier,
+		jokeRepo,
+		logrus.StandardLogger(),
+		opts,
+	)
+
+	// joke tg service
+	tgService := app.NewJokeService(
+		tgNotifier,
+		jokeRepo,
+		logrus.StandardLogger(),
+		opts,
+	)
+
+	// tg listener
+	tgListener, err := callback.NewTGListener(
+		cfg.TGAccessToken,
+		cfg.TGWebhook,
+		tgService,
+		logrus.StandardLogger(),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = tgListener.Listen("/tg")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	info, err := bot.GetWebhookInfo()
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	if info.LastErrorDate != 0 {
-		logrus.Errorf("Telegram callback failed: %s", info.LastErrorMessage)
-	}
-	updates := bot.ListenForWebhook("/tg")
-
 	// vk callback
-	cb := callback.NewVKCallback(
+	vkListener := callback.NewVKListener(
 		cfg.VKConfirmToken,
 		cfg.VKSecretKey,
-		service,
-		logrus.StandardLogger())
-	http.HandleFunc("/", cb.HandleFunc)
+		vkService,
+		logrus.StandardLogger(),
+	)
+	vkListener.Listen("/")
 
 	logrus.Info("application server start...")
-	go func() {
-		for update := range updates {
-			log.Printf("%+v\n", update)
-		}
-	}()
 
 	addr := fmt.Sprintf(`%s:%d`, cfg.Host, cfg.Port)
 	logrus.Fatal(http.ListenAndServe(addr, nil))

@@ -18,39 +18,39 @@ type (
 		NotifyAboutInternalError(userID int)
 	}
 
-	VKCallback struct {
+	VKListener struct {
 		service Service
 		cb      callback.Callback
 		logger  Logger
 	}
 )
 
-func NewVKCallback(confirmToken, secretKey string, service Service, logger Logger) *VKCallback {
+func NewVKListener(confirmToken, secretKey string, service Service, logger Logger) *VKListener {
 	cb := callback.Callback{
 		ConfirmationKey: confirmToken,
 		SecretKey:       secretKey,
 	}
-	cb.MessageNew(func(obj object.MessageNewObject, groupID int) {
-		userID := obj.Message.FromID
-
-		command, err := getCommand(obj.Message.Payload, obj.Message.Text)
-		if err != nil {
-			logger.Error(err)
-			service.NotifyAboutInternalError(userID)
-			return
-		}
-
-		service.Command(userID, command)
-	})
-	return &VKCallback{
+	return &VKListener{
 		service: service,
 		cb:      cb,
 		logger:  logger,
 	}
 }
 
-func (c *VKCallback) HandleFunc(w http.ResponseWriter, r *http.Request) {
-	c.cb.HandleFunc(w, r)
+func (vkl *VKListener) Listen(pattern string) {
+	vkl.cb.MessageNew(func(obj object.MessageNewObject, groupID int) {
+		userID := obj.Message.FromID
+
+		command, err := getCommand(obj.Message.Payload, obj.Message.Text)
+		if err != nil {
+			vkl.logger.Error(err)
+			vkl.service.NotifyAboutInternalError(userID)
+			return
+		}
+
+		vkl.service.Command(userID, command)
+	})
+	http.HandleFunc(pattern, vkl.cb.HandleFunc)
 }
 
 func getCommand(payload, text string) (string, error) {
