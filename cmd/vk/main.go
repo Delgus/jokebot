@@ -22,7 +22,9 @@ func main() {
 	db, err := sql.NewConnection(sql.ConnectionOptions{
 		Addr:   cfg.DBAddr,
 		Driver: cfg.DBDriver,
-		Debug:  cfg.DBDebug})
+		Debug:  cfg.DBDebug,
+		Logger: logrus.StandardLogger(),
+	})
 	if err != nil {
 		logrus.Fatalf("vk-server: can't connect database: %v", err)
 	}

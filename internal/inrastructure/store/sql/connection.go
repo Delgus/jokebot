@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v8"
-	"github.com/sirupsen/logrus"
 )
 
 type ConnectionOptions struct {
 	Driver string
 	Addr   string
 	Debug  bool
+	Logger goqu.Logger
 }
 
 func NewConnection(o ConnectionOptions) (*goqu.Database, error) {
@@ -30,7 +30,7 @@ func NewConnection(o ConnectionOptions) (*goqu.Database, error) {
 
 	db := goqu.New(o.Driver, con)
 	if o.Debug {
-		db.Logger(logrus.StandardLogger())
+		db.Logger(o.Logger)
 	}
 	return db, nil
 }

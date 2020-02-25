@@ -91,10 +91,10 @@ func (j *JokeRepo) GetJokeCategoryList() ([]app.JokeCategory, error) {
 }
 
 func resolveJokeRow(row jokeRow) *app.Joke {
-	joke := new(app.Joke)
-	joke.ID = row.ID
-	joke.Text = row.Text
-	return joke
+	return &app.Joke{
+		ID:   row.ID,
+		Text: row.Text,
+	}
 }
 
 func resolveJokeCategoryList(rows []jokeCategoryRow) []app.JokeCategory {
