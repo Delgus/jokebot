@@ -3,122 +3,73 @@ package app
 import (
 	"fmt"
 	"io"
-	"strconv"
+
+	"github.com/delgus/jokebot/internal/bots"
 )
 
-type (
-	JokeCategory struct {
-		ID   int
-		Name string
+// Logger interface for log errors
+type Logger interface {
+	Error(...interface{})
+}
+
+// Options for app
+type Options struct {
+	EOFText               string
+	InternalErrorText     string
+	HelpText              string
+	NotCorrectCommandText string
+}
+
+// App is my app with bot
+type App struct {
+	Listener
+	Notifier
+	bots.Bot
+	Logger
+	Options
+}
+
+// Run my app
+func (a *App) Run(pattern string) {
+	if err := a.Listen(pattern); err != nil {
+		a.Error(err)
 	}
 
-	Joke struct {
-		ID   int
-		Text string
-	}
+	for message := range a.Message() {
+		switch m := message.(type) {
+		case Message:
+			result, err := a.Command(bots.Command{
+				Name: m.Text,
+				Args: bots.Args{
+					UserID: m.UserID,
+				},
+			})
 
-	JokeRepo interface {
-		GetNewJoke(userID int) (*Joke, error)
-		GetNewJokeByCategory(userID int, categoryID int) (*Joke, error)
-		GetJokeCategoryList() ([]JokeCategory, error)
-	}
+			if err == io.EOF {
+				a.sendMessage(m.UserID, a.EOFText)
+			} else if err == bots.ErrWrongCommand {
+				a.sendMessage(m.UserID, a.NotCorrectCommandText)
+			} else if err != nil {
+				a.Error(fmt.Errorf("bot error: %v", err))
+				a.sendMessage(m.UserID, a.InternalErrorText)
+			} else {
+				a.sendMessage(m.UserID, result)
+			}
 
-	Notifier interface {
-		SendMessage(int, string)
-	}
+		case ErrorMessage:
+			a.Error(fmt.Errorf("listener error: %v", m.Error))
+			a.sendMessage(m.UserID, a.InternalErrorText)
+		case HelpMessage:
+			a.sendMessage(m.UserID, a.HelpText)
+		default:
+			a.Error(fmt.Errorf("unknown message from listener"))
+		}
 
-	Logger interface {
-		Error(...interface{})
-	}
-
-	Options struct {
-		JokeCommand string
-		ListCommand string
-		HelpCommand string
-
-		JokesAreOverText       string
-		TryAnotherCategoryText string
-		InternalErrorText      string
-		HelpMessageText        string
-		NotCorrectCommandText  string
-	}
-
-	JokeService struct {
-		*Options
-		n      Notifier
-		r      JokeRepo
-		logger Logger
-	}
-)
-
-func NewJokeService(n Notifier, r JokeRepo, l Logger, o *Options) *JokeService {
-	return &JokeService{
-		Options: o,
-		n:       n,
-		r:       r,
-		logger:  l,
 	}
 }
 
-func (j *JokeService) Command(userID int, command string) {
-	switch command {
-	case j.JokeCommand:
-		joke, err := j.r.GetNewJoke(userID)
-		if err == io.EOF {
-			j.n.SendMessage(userID, j.JokesAreOverText)
-			return
-		}
-		if err != nil {
-			j.logger.Error(err)
-			j.n.SendMessage(userID, j.InternalErrorText)
-			return
-		}
-
-		j.n.SendMessage(userID, joke.Text)
-
-	case j.ListCommand:
-		list, err := j.r.GetJokeCategoryList()
-		if err != nil {
-			j.logger.Error(err)
-			j.n.SendMessage(userID, j.InternalErrorText)
-			return
-		}
-
-		j.n.SendMessage(userID, listMessage(list))
-
-	case j.HelpCommand:
-		j.n.SendMessage(userID, j.HelpMessageText)
-
-	default:
-		categoryID, err := strconv.Atoi(command)
-		if err != nil {
-			j.n.SendMessage(userID, j.NotCorrectCommandText+j.HelpMessageText)
-			return
-		}
-
-		joke, err := j.r.GetNewJokeByCategory(userID, categoryID)
-		if err == io.EOF {
-			j.n.SendMessage(userID, j.JokesAreOverText+" "+j.TryAnotherCategoryText)
-			return
-		}
-		if err != nil {
-			j.logger.Error(err)
-			j.n.SendMessage(userID, j.InternalErrorText)
-			return
-		}
-
-		j.n.SendMessage(userID, joke.Text)
+func (a *App) sendMessage(userID int, result string) {
+	if err := a.SendMessage(userID, result); err != nil {
+		a.Error(fmt.Errorf("notifier error: %v", err))
 	}
-}
-
-func (j *JokeService) NotifyAboutInternalError(userID int) {
-	j.n.SendMessage(userID, j.InternalErrorText)
-}
-
-func listMessage(list []JokeCategory) string {
-	var message string
-	for _, l := range list {
-		message += fmt.Sprintf("%d. %s\n", l.ID, l.Name)
-	}
-	return message
 }
