@@ -38,6 +38,11 @@ func (a *App) Run(pattern string) {
 	for message := range a.Message() {
 		switch m := message.(type) {
 		case Message:
+			if m.Text == "help" {
+				a.sendMessage(m.UserID, a.HelpText)
+				continue
+			}
+
 			result, err := a.Command(bots.Command{
 				Name: m.Text,
 				Args: bots.Args{
@@ -59,8 +64,7 @@ func (a *App) Run(pattern string) {
 		case ErrorMessage:
 			a.Error(fmt.Errorf("listener error: %v", m.Error))
 			a.sendMessage(m.UserID, a.InternalErrorText)
-		case HelpMessage:
-			a.sendMessage(m.UserID, a.HelpText)
+
 		default:
 			a.Error(fmt.Errorf("unknown message from listener"))
 		}

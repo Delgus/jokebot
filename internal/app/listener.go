@@ -12,12 +12,6 @@ type ErrorMessage struct {
 	Error  error
 }
 
-// HelpMessage - message about help
-type HelpMessage struct {
-	UserID int
-	Help   bool
-}
-
 // Listener interface for listen client
 type Listener interface {
 	Message() <-chan interface{}

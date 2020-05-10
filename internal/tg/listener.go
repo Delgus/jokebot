@@ -49,9 +49,6 @@ func (l *Listener) Listen(pattern string) error {
 			userID := update.Message.Chat.ID
 			command := update.Message.Text
 
-			if command == "help" {
-				l.mChan <- app.HelpMessage{UserID: int(userID), Help: true}
-			}
 			if err != nil {
 				l.mChan <- app.ErrorMessage{UserID: int(userID), Error: err}
 				continue
