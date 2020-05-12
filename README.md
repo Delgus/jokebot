@@ -1,3 +1,4 @@
-# Бот с зашкварными анекдотами
+# Bot with oldest russian jokes
 
-Демо - [https://vk.com/im?sel=-54136463](https://vk.com/im?sel=-54136463)
+VK - [https://vk.com/im?sel=-54136463](https://vk.com/im?sel=-54136463)
+TG - @AnekdotusBot

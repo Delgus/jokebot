@@ -7,6 +7,7 @@ import (
 // Notifier tg notifier
 type Notifier struct {
 	client *tg.BotAPI
+	bsh    func(*tg.MessageConfig)
 }
 
 // NewNotifier return new tg notifier
@@ -23,17 +24,19 @@ func NewNotifier(accessToken string) (*Notifier, error) {
 func (n *Notifier) SendMessage(userID int, text string) error {
 
 	msg := tg.NewMessage(int64(userID), text)
-	msg.ReplyMarkup = tg.NewReplyKeyboard(
-		tg.NewKeyboardButtonRow(
-			tg.NewKeyboardButton("joke"),
-			tg.NewKeyboardButton("list"),
-			tg.NewKeyboardButton("help"),
-		),
-	)
+
+	if n.bsh != nil {
+		n.bsh(&msg)
+	}
 
 	if _, err := n.client.Send(msg); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// SetBeforeSendHook set hook for change message before send
+func (n *Notifier) SetBeforeSendHook(hook func(m *tg.MessageConfig)) {
+	n.bsh = hook
 }

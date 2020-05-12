@@ -5,11 +5,13 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/SevereCloud/vksdk/api/params"
 	"github.com/delgus/jokebot/internal/app"
 	"github.com/delgus/jokebot/internal/bots/jokebot"
 	"github.com/delgus/jokebot/internal/bots/jokebot/store/sql"
 	"github.com/delgus/jokebot/internal/tg"
 	"github.com/delgus/jokebot/internal/vk"
+	tba "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 )
@@ -70,8 +72,45 @@ func main() {
 	}
 
 	// vk bot
+	vkNotifier := vk.NewNotifier(cfg.VKAccessToken)
+	vkNotifier.SetBeforeSendHook(func(m *params.MessagesSendBuilder) {
+		m.Keyboard(`{
+			"buttons": [
+			  [
+				{
+				  "action": {
+					"type": "text",
+					"label": "Анекдот",
+					"payload": "{\"command\":\"joke\"}"
+				  },
+				  "color": "positive"
+				}
+			  ],
+			  [
+				{
+				  "action": {
+					"type": "text",
+					"label": "Категории анекдотов",
+					"payload": "{\"command\":\"list\"}"
+				  },
+				  "color": "negative"
+				}
+			  ],
+			  [
+				{
+				  "action": {
+					"type": "text",
+					"label": "Помощь",
+					"payload": "{\"command\":\"help\"}"
+				  },
+				  "color": "primary"
+				}
+			  ]
+			]
+		  }`)
+	})
 	vkBotApp := &app.App{
-		Notifier: vk.NewNotifier(cfg.VKAccessToken),
+		Notifier: vkNotifier,
 		Bot:      jokeBot,
 		Listener: vk.NewListener(cfg.VKConfirmToken, cfg.VKSecretKey),
 		Logger:   logrus.StandardLogger(),
@@ -83,6 +122,15 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+	tgNotifier.SetBeforeSendHook(func(m *tba.MessageConfig) {
+		m.ReplyMarkup = tba.NewReplyKeyboard(
+			tba.NewKeyboardButtonRow(
+				tba.NewKeyboardButton("joke"),
+				tba.NewKeyboardButton("list"),
+				tba.NewKeyboardButton("help"),
+			),
+		)
+	})
 
 	// tg listener
 	tgListener, err := tg.NewListener(cfg.TGAccessToken, cfg.TGWebhook)

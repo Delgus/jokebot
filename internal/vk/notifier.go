@@ -7,14 +7,13 @@ import (
 
 // Notifier - vk notifier
 type Notifier struct {
-	vk *api.VK
+	vk  *api.VK
+	bsh func(*params.MessagesSendBuilder)
 }
 
 // NewNotifier return new vk notifier
 func NewNotifier(accessToken string) *Notifier {
-	return &Notifier{
-		vk: api.Init(accessToken),
-	}
+	return &Notifier{vk: api.NewVK(accessToken)}
 }
 
 // SendMessage implement app notifier
@@ -24,44 +23,19 @@ func (n *Notifier) SendMessage(userID int, text string) error {
 	b.RandomID(0)
 	b.DontParseLinks(false)
 	b.Message(text)
-	b.Keyboard(`{
-		"buttons": [
-		  [
-			{
-			  "action": {
-				"type": "text",
-				"label": "Анекдот",
-				"payload": "{\"command\":\"joke\"}"
-			  },
-			  "color": "positive"
-			}
-		  ],
-		  [
-			{
-			  "action": {
-				"type": "text",
-				"label": "Категории анекдотов",
-				"payload": "{\"command\":\"list\"}"
-			  },
-			  "color": "negative"
-			}
-		  ],
-		  [
-			{
-			  "action": {
-				"type": "text",
-				"label": "Помощь",
-				"payload": "{\"command\":\"help\"}"
-			  },
-			  "color": "primary"
-			}
-		  ]
-		]
-	  }`)
+
+	if n.bsh != nil {
+		n.bsh(b)
+	}
 
 	if _, err := n.vk.MessagesSend(b.Params); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// SetBeforeSendHook set hook for change message before send
+func (n *Notifier) SetBeforeSendHook(hook func(*params.MessagesSendBuilder)) {
+	n.bsh = hook
 }
