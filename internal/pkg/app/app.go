@@ -3,8 +3,6 @@ package app
 import (
 	"fmt"
 	"io"
-
-	"github.com/delgus/jokebot/internal/bots"
 )
 
 // Logger interface for log errors
@@ -24,7 +22,7 @@ type Options struct {
 type App struct {
 	Listener
 	Notifier
-	bots.Bot
+	Bot
 	Logger
 	Options
 }
@@ -43,16 +41,16 @@ func (a *App) Run(pattern string) {
 				continue
 			}
 
-			result, err := a.Command(bots.Command{
+			result, err := a.Command(Command{
 				Name: m.Text,
-				Args: bots.Args{
+				Args: Args{
 					UserID: m.UserID,
 				},
 			})
 
 			if err == io.EOF {
 				a.sendMessage(m.UserID, a.EOFText)
-			} else if err == bots.ErrWrongCommand {
+			} else if err == ErrWrongCommand {
 				a.sendMessage(m.UserID, a.NotCorrectCommandText)
 			} else if err != nil {
 				a.Error(fmt.Errorf("bot error: %v", err))

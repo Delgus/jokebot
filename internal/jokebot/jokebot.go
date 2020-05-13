@@ -3,7 +3,7 @@ package jokebot
 import (
 	"strconv"
 
-	"github.com/delgus/jokebot/internal/bots"
+	"github.com/delgus/jokebot/internal/pkg/app"
 )
 
 type (
@@ -33,7 +33,7 @@ func NewBot(r JokeRepo) *JokeBot {
 }
 
 // Command implement interface Bot
-func (j *JokeBot) Command(command bots.Command) (string, error) {
+func (j *JokeBot) Command(command app.Command) (string, error) {
 	switch command.Name {
 	case JokeCommand:
 		return j.r.GetNewJoke(command.Args.UserID)
@@ -44,7 +44,7 @@ func (j *JokeBot) Command(command bots.Command) (string, error) {
 	default:
 		cat, err := strconv.Atoi(command.Name)
 		if err != nil {
-			return "", bots.ErrWrongCommand
+			return "", app.ErrWrongCommand
 		}
 		return j.r.GetNewJokeByCategory(command.Args.UserID, cat)
 	}

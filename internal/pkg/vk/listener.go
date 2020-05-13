@@ -6,7 +6,7 @@ import (
 
 	"github.com/SevereCloud/vksdk/callback"
 	"github.com/SevereCloud/vksdk/object"
-	"github.com/delgus/jokebot/internal/app"
+	"github.com/delgus/jokebot/internal/pkg/app"
 )
 
 // Listener listen vk api

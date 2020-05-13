@@ -1,7 +1,7 @@
 package tg
 
 import (
-	"github.com/delgus/jokebot/internal/app"
+	"github.com/delgus/jokebot/internal/pkg/app"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 

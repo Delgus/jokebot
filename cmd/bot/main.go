@@ -2,15 +2,14 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/SevereCloud/vksdk/api/params"
-	"github.com/delgus/jokebot/internal/app"
-	"github.com/delgus/jokebot/internal/bots/jokebot"
-	"github.com/delgus/jokebot/internal/bots/jokebot/store/sql"
-	"github.com/delgus/jokebot/internal/tg"
-	"github.com/delgus/jokebot/internal/vk"
+	"github.com/delgus/jokebot/internal/jokebot"
+	"github.com/delgus/jokebot/internal/jokebot/store/sql"
+	"github.com/delgus/jokebot/internal/pkg/app"
+	"github.com/delgus/jokebot/internal/pkg/tg"
+	"github.com/delgus/jokebot/internal/pkg/vk"
 	tba "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
@@ -135,7 +134,7 @@ func main() {
 	// tg listener
 	tgListener, err := tg.NewListener(cfg.TGAccessToken, cfg.TGWebhook)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 
 	// tg bot
