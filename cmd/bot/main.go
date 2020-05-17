@@ -4,13 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/SevereCloud/vksdk/api/params"
+	easybot "github.com/delgus/easy-bot"
 	"github.com/delgus/jokebot/internal/jokebot"
 	"github.com/delgus/jokebot/internal/jokebot/store/sql"
-	"github.com/delgus/jokebot/internal/pkg/app"
-	"github.com/delgus/jokebot/internal/pkg/tg"
-	"github.com/delgus/jokebot/internal/pkg/vk"
-	tba "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 )
@@ -46,13 +42,11 @@ func main() {
 		logrus.Fatalf("can't connect database: %v", err)
 	}
 
-	// repository for jokebot
-	jokeRepo := sql.NewJokeRepo(db)
+	// jokebot
+	jokeBot := jokebot.NewBot(sql.NewJokeRepo(db))
 
-	jokeBot := jokebot.NewBot(jokeRepo)
-
-	// options for notifiers
-	opts := app.Options{
+	// common options for apps
+	opts := easybot.Options{
 		EOFText:           `Шутки кончились господа!`,
 		InternalErrorText: `Внутренняя ошибка. На нашей стороне ошибка, попробуйте позднее`,
 		HelpText: `
@@ -70,84 +64,15 @@ func main() {
 		NotCorrectCommandText: "Неверная команда! \n",
 	}
 
-	// vk bot
-	vkNotifier := vk.NewNotifier(cfg.VKAccessToken)
-	vkNotifier.SetBeforeSendHook(func(m *params.MessagesSendBuilder) {
-		m.Keyboard(`{
-			"buttons": [
-			  [
-				{
-				  "action": {
-					"type": "text",
-					"label": "Анекдот",
-					"payload": "{\"command\":\"joke\"}"
-				  },
-				  "color": "positive"
-				}
-			  ],
-			  [
-				{
-				  "action": {
-					"type": "text",
-					"label": "Категории анекдотов",
-					"payload": "{\"command\":\"list\"}"
-				  },
-				  "color": "negative"
-				}
-			  ],
-			  [
-				{
-				  "action": {
-					"type": "text",
-					"label": "Помощь",
-					"payload": "{\"command\":\"help\"}"
-				  },
-				  "color": "primary"
-				}
-			  ]
-			]
-		  }`)
-	})
-	vkBotApp := &app.App{
-		Notifier: vkNotifier,
-		Bot:      jokeBot,
-		Listener: vk.NewListener(cfg.VKConfirmToken, cfg.VKSecretKey),
-		Logger:   logrus.StandardLogger(),
-		Options:  opts,
-	}
-
-	// tg notifier
-	tgNotifier, err := tg.NewNotifier(cfg.TGAccessToken)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	tgNotifier.SetBeforeSendHook(func(m *tba.MessageConfig) {
-		m.ReplyMarkup = tba.NewReplyKeyboard(
-			tba.NewKeyboardButtonRow(
-				tba.NewKeyboardButton("joke"),
-				tba.NewKeyboardButton("list"),
-				tba.NewKeyboardButton("help"),
-			),
-		)
-	})
-
-	// tg listener
-	tgListener, err := tg.NewListener(cfg.TGAccessToken, cfg.TGWebhook)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
-	// tg bot
-	tgBotApp := &app.App{
-		Notifier: tgNotifier,
-		Bot:      jokeBot,
-		Listener: tgListener,
-		Logger:   logrus.StandardLogger(),
-		Options:  opts,
-	}
-
+	// vk app with bot
+	vkBotApp := vkApp(cfg, jokeBot, opts, logrus.StandardLogger())
 	go vkBotApp.Run("/vk")
 
+	// tg app with bot
+	tgBotApp, err := tgApp(cfg, jokeBot, opts, logrus.StandardLogger())
+	if err != nil {
+		logrus.Fatal(err)
+	}
 	go tgBotApp.Run("/tg")
 
 	logrus.Info("application server start...")
@@ -156,8 +81,8 @@ func main() {
 	logrus.Fatal(http.ListenAndServe(addr, nil))
 }
 
-func loadConfig() (config, error) {
+func loadConfig() (*config, error) {
 	var cfg config
 	err := envconfig.Process("", &cfg)
-	return cfg, err
+	return &cfg, err
 }
