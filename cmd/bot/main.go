@@ -66,17 +66,24 @@ func main() {
 
 	// vk app with bot
 	vkBotApp := vkApp(cfg, jokeBot, opts, logrus.StandardLogger())
-	go vkBotApp.Run("/vk")
+	go func() {
+		if err := vkBotApp.Run("/vk"); err != nil {
+			logrus.Fatal("can not start vk bot app")
+		}
+	}()
 
 	// tg app with bot
 	tgBotApp, err := tgApp(cfg, jokeBot, opts, logrus.StandardLogger())
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	go tgBotApp.Run("/tg")
+	go func() {
+		if err := tgBotApp.Run("/tg"); err != nil {
+			logrus.Fatal("can not start tg bot app")
+		}
+	}()
 
-	logrus.Info("application server start...")
-
+	logrus.Info("start server for tg and app")
 	addr := fmt.Sprintf(`%s:%d`, cfg.Host, cfg.Port)
 	logrus.Fatal(http.ListenAndServe(addr, nil))
 }
