@@ -31,6 +31,5 @@ jobs:
         username: ${{ secrets.USER }}
         password: ${{ secrets.PSW }}
         script: | 
-          cd ~/deployments/jokebot
-          ls -a
+          docker run --name=jokebot --rm -e VK_ACCESS_TOKEN=${{ secrets.VK_ACCESS_TOKEN }} -e VK_CONFIRM_TOKEN=${{ secrets.VK_CONFIRM_TOKEN }} -e VK_SECRET_KEY=${{ secrets.VK_SECRET_KEY }} -e DB_DRIVER=${{ secrets.DB_DRIVER }} -e DB_ADDR=${{ secrets.DB_ADDR }} -e TG_ACCESS_TOKEN=${{ secrets.TG_ACCESS_TOKEN }} -e TG_WEBHOOK=${{ secrets.TG_WEBHOOK}} -p ${{ secrets.DEPLOY_PORT }}:80 delgus/jokebot
 
