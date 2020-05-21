@@ -74,7 +74,7 @@ func main() {
 
 	logrus.Info("start server for tg and app")
 	addr := fmt.Sprintf(`%s:%d`, cfg.Host, cfg.Port)
-	logrus.Fatal(http.ListenAndServe(addr, nil))s
+	logrus.Fatal(http.ListenAndServe(addr, nil))
 }
 
 func loadConfig() (*config, error) {
