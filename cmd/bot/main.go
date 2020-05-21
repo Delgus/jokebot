@@ -72,6 +72,17 @@ func main() {
 		}
 	}()
 
+	// tg app with bot
+	tgBotApp, err := tgApp(cfg, jokeBot, opts, logrus.StandardLogger())
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	go func() {
+		if err := tgBotApp.Run("/tg"); err != nil {
+			logrus.Fatal("can not start tg bot app")
+		}
+	}()
+
 	logrus.Info("start server for tg and app")
 	addr := fmt.Sprintf(`%s:%d`, cfg.Host, cfg.Port)
 	logrus.Fatal(http.ListenAndServe(addr, nil))
