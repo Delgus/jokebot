@@ -75,14 +75,11 @@ func main() {
 	// tg app with bot
 	tgBotApp, err := tgApp(cfg, jokeBot, opts, logrus.StandardLogger())
 	if err != nil {
-		logrus.Info(err)
+		logrus.Fatal(err)
 	}
 	go func() {
-		if tgBotApp == nil {
-			return
-		}
 		if err := tgBotApp.Run("/tg"); err != nil {
-			logrus.Info("can not start tg bot app")
+			logrus.Fatal("can not start tg bot app")
 		}
 	}()
 
