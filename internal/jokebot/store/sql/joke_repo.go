@@ -58,7 +58,7 @@ func (j *JokeRepo) GetNewJoke(userID int, client string) (string, error) {
 }
 
 // GetNewJokeByCategory return new joke by category
-func (j *JokeRepo) GetNewJokeByCategory(userID, client string, categoryID int) (string, error) {
+func (j *JokeRepo) GetNewJokeByCategory(userID int, client string, categoryID int) (string, error) {
 	var row jokeRow
 	found, err := j.db.
 		From("joke").
