@@ -16,6 +16,9 @@ jobs:
     - uses: golangci/golangci-lint-action@v1
       with:
           version: v1.27
+    
+    - name: build 
+      run: CGO_ENABLED=0 make build
 
     - uses: docker/build-push-action@v1 
       with:
