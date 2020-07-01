@@ -14,8 +14,8 @@ type (
 
 	// JokeRepo is repository for storage of jokes
 	JokeRepo interface {
-		GetNewJoke(userID int) (string, error)
-		GetNewJokeByCategory(userID int, categoryID int) (string, error)
+		GetNewJoke(userID int, client string) (string, error)
+		GetNewJokeByCategory(userID int, client string, categoryID int) (string, error)
 		GetJokeCategoryList() (string, error)
 	}
 )
@@ -36,7 +36,7 @@ func NewBot(r JokeRepo) *JokeBot {
 func (j *JokeBot) Command(command easybot.Command) (string, error) {
 	switch command.Name {
 	case JokeCommand:
-		return j.r.GetNewJoke(command.Args.UserID)
+		return j.r.GetNewJoke(command.Args.UserID, string(command.Args.Client))
 
 	case CategoryListCommand:
 		return j.r.GetJokeCategoryList()
@@ -46,6 +46,6 @@ func (j *JokeBot) Command(command easybot.Command) (string, error) {
 		if err != nil {
 			return "", easybot.ErrWrongCommand
 		}
-		return j.r.GetNewJokeByCategory(command.Args.UserID, cat)
+		return j.r.GetNewJokeByCategory(command.Args.UserID, string(command.Args.Client), cat)
 	}
 }

@@ -28,14 +28,17 @@ func NewJokeRepo(db *goqu.Database) *JokeRepo {
 }
 
 // GetNewJoke return new Joke
-func (j *JokeRepo) GetNewJoke(userID int) (string, error) {
+func (j *JokeRepo) GetNewJoke(userID int, client string) (string, error) {
 	var row jokeRow
 	found, err := j.db.From("joke").
 		Select("joke.id", "text").
 		LeftJoin(goqu.T("joke_user"),
 			goqu.On(
 				goqu.Ex{"joke_user.joke_id": goqu.I("joke.id")},
-				goqu.I("user_id").Eq(userID))).
+				goqu.I("user_id").Eq(userID),
+				goqu.I("client").Eq(client),
+			),
+		).
 		Where(goqu.I("user_id").IsNull()).
 		ScanStruct(&row)
 	if err != nil {
@@ -45,7 +48,7 @@ func (j *JokeRepo) GetNewJoke(userID int) (string, error) {
 		return "", io.EOF
 	}
 	insert := j.db.Insert("joke_user").Rows(
-		goqu.Record{"user_id": userID, "joke_id": row.ID},
+		goqu.Record{"user_id": userID, "client": client, "joke_id": row.ID},
 	).Executor()
 
 	if _, err := insert.Exec(); err != nil {
@@ -55,14 +58,18 @@ func (j *JokeRepo) GetNewJoke(userID int) (string, error) {
 }
 
 // GetNewJokeByCategory return new joke by category
-func (j *JokeRepo) GetNewJokeByCategory(userID, categoryID int) (string, error) {
+func (j *JokeRepo) GetNewJokeByCategory(userID, client string, categoryID int) (string, error) {
 	var row jokeRow
-	found, err := j.db.From("joke").
+	found, err := j.db.
+		From("joke").
 		Select("joke.id", "text").
 		LeftJoin(goqu.T("joke_user"),
 			goqu.On(
 				goqu.Ex{"joke_user.joke_id": goqu.I("joke.id")},
-				goqu.I("user_id").Eq(userID))).
+				goqu.I("user_id").Eq(userID),
+				goqu.I("client").Eq(client),
+			),
+		).
 		Where(goqu.I("user_id").IsNull(), goqu.I("category_id").Eq(categoryID)).
 		ScanStruct(&row)
 	if err != nil {
@@ -72,7 +79,7 @@ func (j *JokeRepo) GetNewJokeByCategory(userID, categoryID int) (string, error) 
 		return "", io.EOF
 	}
 	insert := j.db.Insert("joke_user").Rows(
-		goqu.Record{"user_id": userID, "joke_id": row.ID},
+		goqu.Record{"user_id": userID, "client": client, "joke_id": row.ID},
 	).Executor()
 
 	if _, err := insert.Exec(); err != nil {
