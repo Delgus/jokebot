@@ -7,21 +7,24 @@ import (
 	easybot "github.com/delgus/easy-bot"
 	"github.com/delgus/jokebot/internal/jokebot"
 	"github.com/delgus/jokebot/internal/jokebot/store/sql"
+	tghook "github.com/delgus/tg-logrus-hook"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 )
 
 type config struct {
-	Host           string `envconfig:"HOST"`
-	Port           int    `envconfig:"PORT"`
-	VKAccessToken  string `envconfig:"VK_ACCESS_TOKEN" default:"default"`
-	VKConfirmToken string `envconfig:"VK_CONFIRM_TOKEN" default:"default"`
-	VKSecretKey    string `envconfig:"VK_SECRET_KEY" default:"default"`
-	DBDriver       string `envconfig:"DB_DRIVER" default:"sqlite3"`
-	DBAddr         string `envconfig:"DB_ADDR" default:"../../database/jokebot.db"`
-	DBDebug        bool   `envconfig:"DB_DEBUG" default:"false"`
-	TGAccessToken  string `envconfig:"TG_ACCESS_TOKEN"`
-	TGWebhook      string `envconfig:"TG_WEBHOOK"`
+	Host             string `envconfig:"HOST"`
+	Port             int    `envconfig:"PORT"`
+	VKAccessToken    string `envconfig:"VK_ACCESS_TOKEN" default:"default"`
+	VKConfirmToken   string `envconfig:"VK_CONFIRM_TOKEN" default:"default"`
+	VKSecretKey      string `envconfig:"VK_SECRET_KEY" default:"default"`
+	DBDriver         string `envconfig:"DB_DRIVER" default:"sqlite3"`
+	DBAddr           string `envconfig:"DB_ADDR" default:"../../database/jokebot.db"`
+	DBDebug          bool   `envconfig:"DB_DEBUG" default:"false"`
+	TGAccessToken    string `envconfig:"TG_ACCESS_TOKEN"`
+	TGWebhook        string `envconfig:"TG_WEBHOOK"`
+	LogTGChatID      int64  `envconfig:"LOG_TG_CHAT_ID"`
+	LogTGAccessToken string `envconfig:"LOG_TG_ACCESS_TOKEN"`
 }
 
 func main() {
@@ -29,6 +32,15 @@ func main() {
 	cfg, err := loadConfig()
 	if err != nil {
 		logrus.Fatalf("can't load config: %v", err)
+	}
+
+	hook, err := tghook.NewHook(cfg.LogTGAccessToken, cfg.LogTGChatID, logrus.AllLevels)
+	if err != nil {
+		logrus.Errorf(`can not create tg hook for logging: %v`, err)
+	} else {
+		logrus.Info(`create tg hook for logging`)
+		logrus.StandardLogger().AddHook(hook)
+		logrus.Info(`add hook!!!`)
 	}
 
 	// db connection for jokebot

@@ -7,6 +7,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/delgus/easy-bot v0.0.3 h1:jAqiBjlXiwepDlYnh3YrwEuer6XFkZX6AUb1yt0pWBA=
 github.com/delgus/easy-bot v0.0.3/go.mod h1:0yPGNx1ff6MCXPigHG4PN+TaDnqEOg2k+3Csrn/nP8E=
+github.com/delgus/tg-logrus-hook v0.0.2 h1:expU0B0IXayUNTTXC6swVzOaqWV2QCssOGAhS9BiEy8=
+github.com/delgus/tg-logrus-hook v0.0.2/go.mod h1:hZE+bLAzP4B2/iWO5RLkQFrRn9jwhMt4V8h2r8Nb3Os=
 github.com/doug-martin/goqu/v8 v8.6.0 h1:KWuDGL135poBgY+SceArvOtIIEpieNKgIZCvgerI228=
 github.com/doug-martin/goqu/v8 v8.6.0/go.mod h1:wiiYWkiguNXK5d4kGIkYmOxBScEL37d9Cfv9tXhPsTk=
 github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
@@ -60,5 +62,7 @@ golang.org/x/tools v0.0.0-20190606124116-d0a3d012864b/go.mod h1:/rFqwRUd4F7ZHNgw
 google.golang.org/appengine v1.6.1/go.mod h1:i06prIuMbXzDqacNJfV5OdTW448YApPu5ww/cMBSeb0=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/telegram-bot-api.v4 v4.6.4 h1:hpHWhzn4jTCsAJZZ2loNKfy2QWyPDRJVl3aTFXeMW8g=
+gopkg.in/telegram-bot-api.v4 v4.6.4/go.mod h1:5DpGO5dbumb40px+dXcwCpcjmeHNYLpk0bp3XRNvWDM=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c h1:dUUwHk2QECo/6vqA44rthZ8ie2QXMNeKRTHCNY2nXvo=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
