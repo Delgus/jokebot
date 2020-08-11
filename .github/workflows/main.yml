@@ -40,4 +40,6 @@ jobs:
         DB_DRIVER: ${{ secrets.DB_DRIVER }}
         DB_ADDR: ${{ secrets.DB_ADDR }}
         DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        LOG_TG_CHAT_ID: ${{ secrets.LOG_TG_CHAT_ID }}
+        LOG_TG_ACCESS_TOKEN: ${{ secrets.LOG_TG_ACCESS_TOKEN }}
           
