@@ -1,6 +1,6 @@
 module github.com/delgus/jokebot
 
-go 1.14
+go 1.15
 
 require (
 	github.com/SevereCloud/vksdk v1.10.0
